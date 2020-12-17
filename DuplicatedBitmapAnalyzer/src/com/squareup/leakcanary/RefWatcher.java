@@ -127,7 +127,6 @@ public final class RefWatcher {
     removeWeaklyReachableReferences();
 
     if (debuggerControl.isDebuggerAttached()) {
-      // The debugger can create false leaks. 排除因为 Debug 造成的泄漏
       return RETRY;
     }
     if (gone(reference)) {
@@ -145,7 +144,6 @@ public final class RefWatcher {
         return RETRY;
       }
       long heapDumpDurationMs = NANOSECONDS.toMillis(System.nanoTime() - startDumpHeap);
-      // 分析 Dump 文件 ，内部使用 haha 库分析
       HeapDump heapDump = heapDumpBuilder.heapDumpFile(heapDumpFile).referenceKey(reference.key)
           .referenceName(reference.name)
           .watchDurationMs(watchDurationMs)

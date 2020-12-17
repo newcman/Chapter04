@@ -170,21 +170,17 @@ public final class HeapAnalyzer {
       // 解析器解
       HprofParser parser = new HprofParser(buffer);
       listener.onProgressUpdate(PARSING_HEAP_DUMP);
-      // 解析过程，是基于 google 的 preflib 库，根据 hprof 的格式进行解析
       Snapshot snapshot = parser.parse();
       listener.onProgressUpdate(DEDUPLICATING_GC_ROOTS);
       // 解决去重
       deduplicateGcRoots(snapshot);
       listener.onProgressUpdate(FINDING_LEAKING_REF);
-      // reference key UUID key？UUID.randomUUID() 作用 提供的一个自动生成主键的方法
-      // 在一台机器上生成的数字保证对在同一时空中的所有机器都是唯一的
       Instance leakingRef = findLeakingReference(referenceKey, snapshot);
 
       // False alarm, weak reference was cleared in between key check and heap dump.
       if (leakingRef == null) {
         return noLeak(since(analysisStartNanoTime));
       }
-      // 此对象存在也不能确认它内存泄漏了，还要检测此对象的 gc root
       return findLeakTrace(analysisStartNanoTime, snapshot, leakingRef, computeRetainedSize);
     } catch (Throwable e) {
       return failure(e, since(analysisStartNanoTime));
@@ -234,7 +230,7 @@ public final class HeapAnalyzer {
         keysFound.add(null);
         continue;
       }
-      // 找到 KeyedWeakReference 里面的 Key 值，UUID
+      // 找到 KeyedWeakReference 里面的Key值，UUID
       String keyCandidate = asString(keyFieldValue);
       if (keyCandidate.equals(key)) {
         return fieldValue(values, "referent");
@@ -249,9 +245,7 @@ public final class HeapAnalyzer {
       Instance leakingRef, boolean computeRetainedSize) {
 
     listener.onProgressUpdate(FINDING_SHORTEST_PATH);
-    //这两行代码是判断内存泄露的关键,我们在上篇中分析hprof文件,判断内存泄漏
-    //判断的依据是展开调用到gc root,所谓gc root,就是不能被gc回收的对象,
-    //gc root有很多类型,我们只要关注两种类型1.此对象是静态 2.此对象被其他线程使用,并且其他线程正在运行,没有结束
+
     ShortestPathFinder pathFinder = new ShortestPathFinder(excludedRefs);
     ShortestPathFinder.Result result = pathFinder.findPath(snapshot, leakingRef);
 
@@ -274,7 +268,6 @@ public final class HeapAnalyzer {
       snapshot.computeDominators();
 
       Instance leakingInstance = result.leakingNode.instance;
-      // 计算泄漏的空间大小
       retainedSize = leakingInstance.getTotalRetainedSize();
 
       // TODO: check O sources and see what happened to android.graphics.Bitmap.mBuffer

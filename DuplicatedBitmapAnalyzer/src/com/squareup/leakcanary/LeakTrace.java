@@ -39,7 +39,7 @@ public final class LeakTrace implements Serializable {
       LeakTraceElement element = elements.get(i);
       sb.append("* ");
       if (i != 0) {
-        sb.append("↳ ");
+        sb.append("- ");
       }
       boolean maybeLeakCause = false;
       Reachability currentReachability = expectedReachability.get(i);

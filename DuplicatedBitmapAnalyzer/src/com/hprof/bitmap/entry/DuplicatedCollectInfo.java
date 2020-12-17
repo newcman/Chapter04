@@ -12,7 +12,7 @@ public class DuplicatedCollectInfo {
     // hash
     private String mHash;
 
-    // 相同 hash 的 Bitmap
+    // 相同hash的Bitmap
     private ArrayList<BitmapInstance> mBitmapInstances = new ArrayList<>();
 
     // mBitmapInstances size
